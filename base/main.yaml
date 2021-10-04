@@ -1,6 +1,6 @@
 apiVersion: v1
 data:
-  jenkins-password: ZEM0bmEzb2RDdw==
+  jenkins-password: RkVCVTJVTEJicA==
 kind: Secret
 metadata:
   labels:
@@ -77,7 +77,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/secrets: bd57b5d5d6cfd5ac358db4e78fa7393e75696b4bab061f6a002197e5ef70f8b4
+        checksum/secrets: 95988a0d2d98a0162ceba91004922bfa593d2af56e9533c8ec0765173aeaabb1
       labels:
         app.kubernetes.io/instance: jenkins
         app.kubernetes.io/managed-by: Helm

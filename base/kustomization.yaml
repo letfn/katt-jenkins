@@ -3,3 +3,9 @@ kind: Kustomization
 
 resources:
   - main.yaml
+
+patches:
+- path: patch-service-cluster-ip.yaml
+  target:
+    kind: Service
+    name: jenkins
