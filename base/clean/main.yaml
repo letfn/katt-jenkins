@@ -1,360 +1,172 @@
 ---
-# Source: crds/kubernetes-client.io_externalsecrets_crd.yaml
----
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
-  name: externalsecrets.kubernetes-client.io
-  annotations:
-    # used in e2e testing
-    app.kubernetes.io/managed-by: helm
-spec:
-  group: kubernetes-client.io
-  scope: Namespaced
-
-  versions:
-    - name: v1
-      served: true
-      storage: true
-      subresources:
-        status: {}
-      schema:
-        openAPIV3Schema:
-          required:
-            - spec
-          type: object
-          properties:
-            spec:
-              type: object
-              properties:
-                controllerId:
-                  description: The ID of controller instance that manages this ExternalSecret.
-                    This is needed in case there is more than a KES controller instances within the cluster.
-                  type: string
-                type:
-                  type: string
-                  description: >-
-                    DEPRECATED: Use spec.template.type
-                template:
-                  description: Template which will be deep merged without mutating
-                    any existing fields. into generated secret, can be used to
-                    set for example annotations or type on the generated secret
-                  type: object
-                  x-kubernetes-preserve-unknown-fields: true
-                backendType:
-                  description: >-
-                    Determines which backend to use for fetching secrets
-                  type: string
-                  enum:
-                    - secretsManager
-                    - systemManager
-                    - vault
-                    - azureKeyVault
-                    - gcpSecretsManager
-                    - alicloudSecretsManager
-                    - ibmcloudSecretsManager
-                    - akeyless
-                vaultRole:
-                  description: >-
-                    Used by: vault
-                  type: string
-                vaultMountPoint:
-                  description: >-
-                    Used by: vault
-                  type: string
-                kvVersion:
-                  description: Vault K/V version either 1 or 2, default = 2
-                  type: integer
-                  minimum: 1
-                  maximum: 2
-                keyVaultName:
-                  description: >-
-                    Used by: azureKeyVault
-                  type: string
-                dataFrom:
-                  type: array
-                  items:
-                    type: string
-                data:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      key:
-                        description: Secret key in backend
-                        type: string
-                      name:
-                        description: Name set for this key in the generated secret
-                        type: string
-                      property:
-                        description: Property to extract if secret in backend is a JSON object
-                        type: string
-                      isBinary:
-                        description: >-
-                          Whether the backend secret shall be treated as binary data
-                          represented by a base64-encoded string. You must set this to true
-                          for any base64-encoded binary data in the backend - to ensure it
-                          is not encoded in base64 again. Default is false.
-                        type: boolean
-                      path:
-                        description: >-
-                          Path from SSM to scrape secrets
-                          This will fetch all secrets and use the key from the secret as variable name
-                        type: string
-                      recursive:
-                        description: Allow to recurse thru all child keys on a given path, default false
-                        type: boolean
-                      secretType:
-                        description: >-
-                          Used by: ibmcloudSecretsManager
-                          Type of secret - one of username_password, iam_credentials or arbitrary
-                        type: string
-                      version:
-                        description: >-
-                          Used by: gcpSecretsManager
-                        type: string
-                        x-kubernetes-int-or-string: true
-                      versionStage:
-                        description: >-
-                          Used by: alicloudSecretsManager, secretsManager
-                        type: string
-                      versionId:
-                        description: >-
-                          Used by: secretsManager
-                        type: string
-                    oneOf:
-                      - required:
-                          - key
-                          - name
-                      - required:
-                          - path
-                roleArn:
-                  type: string
-                  description: >-
-                    Used by: alicloudSecretsManager, secretsManager, systemManager
-                region:
-                  type: string
-                  description: >-
-                    Used by: secretsManager, systemManager
-                projectId:
-                  type: string
-                  description: >-
-                    Used by: gcpSecretsManager
-              oneOf:
-                - properties:
-                    backendType:
-                      enum:
-                        - secretsManager
-                        - systemManager
-                - properties:
-                    backendType:
-                      enum:
-                        - vault
-                - properties:
-                    backendType:
-                      enum:
-                        - azureKeyVault
-                  required:
-                    - keyVaultName
-                - properties:
-                    backendType:
-                      enum:
-                        - gcpSecretsManager
-                - properties:
-                    backendType:
-                      enum:
-                        - alicloudSecretsManager
-                - properties:
-                    backendType:
-                      enum:
-                        - ibmcloudSecretsManager
-                - properties:
-                    backendType:
-                      enum:
-                        - akeyless
-              anyOf:
-                - required:
-                    - data
-                - required:
-                    - dataFrom
-            status:
-              type: object
-              properties:
-                lastSync:
-                  type: string
-                status:
-                  type: string
-                observedGeneration:
-                  type: number
-      additionalPrinterColumns:
-        - jsonPath: .status.lastSync
-          name: Last Sync
-          type: date
-        - jsonPath: .status.status
-          name: status
-          type: string
-        - jsonPath: .metadata.creationTimestamp
-          name: Age
-          type: date
-
-  names:
-    shortNames:
-      - es
-    kind: ExternalSecret
-    plural: externalsecrets
-    singular: externalsecret
-
----
-# Source: kubernetes-external-secrets/templates/serviceaccount.yaml
+# Source: jenkins/templates/secrets.yaml
 apiVersion: v1
-kind: ServiceAccount
+kind: Secret
 metadata:
-  name: external-secrets-kubernetes-external-secrets
-  namespace: "external-secrets"
+  name: jenkins
+  namespace: "jenkins"
   labels:
-    app.kubernetes.io/name: kubernetes-external-secrets
-    helm.sh/chart: kubernetes-external-secrets-8.3.0
-    app.kubernetes.io/instance: external-secrets
+    app.kubernetes.io/name: jenkins
+    helm.sh/chart: jenkins-8.0.14
+    app.kubernetes.io/instance: jenkins
     app.kubernetes.io/managed-by: Helm
+type: Opaque
+data:
+  jenkins-password: "ZEM0bmEzb2RDdw=="
 ---
-# Source: kubernetes-external-secrets/templates/rbac.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+# Source: jenkins/templates/pvc.yaml
+kind: PersistentVolumeClaim
+apiVersion: v1
 metadata:
-  name: external-secrets-kubernetes-external-secrets
+  name: jenkins
+  namespace: "jenkins"
   labels:
-    app.kubernetes.io/name: kubernetes-external-secrets
-    helm.sh/chart: kubernetes-external-secrets-8.3.0
-    app.kubernetes.io/instance: external-secrets
+    app.kubernetes.io/name: jenkins
+    helm.sh/chart: jenkins-8.0.14
+    app.kubernetes.io/instance: jenkins
     app.kubernetes.io/managed-by: Helm
-rules:
-  - apiGroups: [""]
-    resources: ["secrets"]
-    verbs: ["create", "update", "get"]
-  - apiGroups: [""]
-    resources: ["namespaces"]
-    verbs: ["get", "watch", "list"]
-  - apiGroups: ["apiextensions.k8s.io"]
-    resources: ["customresourcedefinitions"]
-    resourceNames: ["externalsecrets.kubernetes-client.io"]
-    verbs: ["get", "update"]
-  - apiGroups: ["kubernetes-client.io"]
-    resources: ["externalsecrets"]
-    verbs: ["get", "watch", "list"]
-  - apiGroups: ["kubernetes-client.io"]
-    resources: ["externalsecrets/status"]
-    verbs: ["get", "update"]
+  annotations:
+    volume.alpha.kubernetes.io/storage-class: default
+spec:
+  accessModes:
+    - "ReadWriteOnce"
+  resources:
+    requests:
+      storage: "8Gi"
 ---
-# Source: kubernetes-external-secrets/templates/rbac.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: external-secrets-kubernetes-external-secrets
-  labels:
-    app.kubernetes.io/name: kubernetes-external-secrets
-    helm.sh/chart: kubernetes-external-secrets-8.3.0
-    app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/managed-by: Helm
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: external-secrets-kubernetes-external-secrets
-subjects:
-  - name: external-secrets-kubernetes-external-secrets
-    namespace: "external-secrets"
-    kind: ServiceAccount
----
-# Source: kubernetes-external-secrets/templates/rbac.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: external-secrets-kubernetes-external-secrets-auth
-  labels:
-    app.kubernetes.io/name: kubernetes-external-secrets
-    helm.sh/chart: kubernetes-external-secrets-8.3.0
-    app.kubernetes.io/instance: external-secrets
-    app.kubernetes.io/managed-by: Helm
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:auth-delegator
-subjects:
-- name: external-secrets-kubernetes-external-secrets
-  namespace: "external-secrets"
-  kind: ServiceAccount
----
-# Source: kubernetes-external-secrets/templates/service.yaml
+# Source: jenkins/templates/svc.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: external-secrets-kubernetes-external-secrets
-  namespace: "external-secrets"
+  name: jenkins
+  namespace: "jenkins"
   labels:
-    app.kubernetes.io/name: kubernetes-external-secrets
-    helm.sh/chart: kubernetes-external-secrets-8.3.0
-    app.kubernetes.io/instance: external-secrets
+    app.kubernetes.io/name: jenkins
+    helm.sh/chart: jenkins-8.0.14
+    app.kubernetes.io/instance: jenkins
     app.kubernetes.io/managed-by: Helm
 spec:
-  selector:
-    app.kubernetes.io/name: kubernetes-external-secrets
+  type: LoadBalancer
+  externalTrafficPolicy: "Cluster"
   ports:
-    - protocol: TCP
-      port: 3001
-      name: prometheus
-      targetPort: prometheus
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: http
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: https
+  selector:
+    app.kubernetes.io/name: jenkins
+    app.kubernetes.io/instance: jenkins
 ---
-# Source: kubernetes-external-secrets/templates/deployment.yaml
+# Source: jenkins/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: external-secrets-kubernetes-external-secrets
-  namespace: "external-secrets"
+  name: jenkins
+  namespace: "jenkins"
   labels:
-    app.kubernetes.io/name: kubernetes-external-secrets
-    helm.sh/chart: kubernetes-external-secrets-8.3.0
-    app.kubernetes.io/instance: external-secrets
+    app.kubernetes.io/name: jenkins
+    helm.sh/chart: jenkins-8.0.14
+    app.kubernetes.io/instance: jenkins
     app.kubernetes.io/managed-by: Helm
 spec:
-  replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: kubernetes-external-secrets
-      app.kubernetes.io/instance: external-secrets
+      app.kubernetes.io/name: jenkins
+      app.kubernetes.io/instance: jenkins
+  strategy:
+    type: RollingUpdate
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: kubernetes-external-secrets
-        app.kubernetes.io/instance: external-secrets
+        app.kubernetes.io/name: jenkins
+        helm.sh/chart: jenkins-8.0.14
+        app.kubernetes.io/instance: jenkins
+        app.kubernetes.io/managed-by: Helm
+      annotations:
+        checksum/secrets: bd57b5d5d6cfd5ac358db4e78fa7393e75696b4bab061f6a002197e5ef70f8b4
     spec:
-      serviceAccountName: external-secrets-kubernetes-external-secrets
-      containers:
-        - name: kubernetes-external-secrets
-          image: "ghcr.io/external-secrets/kubernetes-external-secrets:8.3.0"
-          ports:
-          - name: prometheus
-            containerPort: 3001
-          imagePullPolicy: IfNotPresent
-          resources:
-            {}
-          env:
-          - name: "AKEYLESS_API_ENDPOINT"
-            value: "https://api.akeyless.io"
-          - name: "AWS_DEFAULT_REGION"
-            value: "us-west-2"
-          - name: "AWS_REGION"
-            value: "us-west-2"
-          - name: "LOG_LEVEL"
-            value: "info"
-          - name: "LOG_MESSAGE_KEY"
-            value: "msg"
-          - name: "METRICS_PORT"
-            value: "3001"
-          - name: "POLLER_INTERVAL_MILLISECONDS"
-            value: "10000"
-          - name: "VAULT_ADDR"
-            value: "http://127.0.0.1:8200"
-          - name: "WATCH_TIMEOUT"
-            value: "60000"
-          # Params for env vars populated from k8s secrets
+      
+      affinity:
+        podAffinity:
+          
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: jenkins
+                    app.kubernetes.io/instance: jenkins
+                namespaces:
+                  - "jenkins"
+                topologyKey: kubernetes.io/hostname
+              weight: 1
+        nodeAffinity:
+          
       securityContext:
-        runAsNonRoot: true
+        fsGroup: 1001
+      containers:
+        - name: jenkins
+          image: docker.io/bitnami/jenkins:2.303.1-debian-10-r38
+          imagePullPolicy: "IfNotPresent"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+          env:
+            - name: JENKINS_USERNAME
+              value: "user"
+            - name: JENKINS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: jenkins
+                  key: jenkins-password
+            - name: JENKINS_HOME
+              value: "/bitnami/jenkins/home"
+            - name: DISABLE_JENKINS_INITIALIZATION
+              value: "no"
+            - name: JENKINS_HOST
+              value: ""
+            - name: JENKINS_EXTERNAL_HTTP_PORT_NUMBER
+              value: "80"
+            - name: JENKINS_EXTERNAL_HTTPS_PORT_NUMBER
+              value: "443"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: https
+              containerPort: 8443
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /login
+              port: http
+            initialDelaySeconds: 180
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /login
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+            successThreshold: 1
+          resources:
+            limits: {}
+            requests:
+              cpu: 300m
+              memory: 512Mi
+          volumeMounts:
+            - name: jenkins-data
+              mountPath: /bitnami/jenkins
+      volumes:
+        - name: jenkins-data
+          persistentVolumeClaim:
+            claimName: jenkins
