@@ -12,7 +12,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 type: Opaque
 data:
-  jenkins-password: "RkVCVTJVTEJicA=="
+  jenkins-password: "Wk01M1NSNnA2dQ=="
 ---
 # Source: jenkins/templates/pvc.yaml
 kind: PersistentVolumeClaim
@@ -87,7 +87,7 @@ spec:
         app.kubernetes.io/instance: jenkins
         app.kubernetes.io/managed-by: Helm
       annotations:
-        checksum/secrets: 95988a0d2d98a0162ceba91004922bfa593d2af56e9533c8ec0765173aeaabb1
+        checksum/secrets: bd55ed9f772f7fb428c60a64c6424ade568159306fc767a723e0441adaf739b2
     spec:
       
       affinity:
